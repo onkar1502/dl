@@ -1,0 +1,68 @@
+# Step 1: Import Libraries
+import tensorflow as tf
+from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
+
+# Step 2: Define paths
+train_dir = 'fashion_mnist/train'
+test_dir = 'fashion_mnist/test'
+
+# Step 3: Load the images using ImageDataGenerator
+train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+
+# Load train images
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(28, 28),
+    color_mode='grayscale',  # Because Fashion MNIST is grayscale
+    batch_size=32,
+    class_mode='sparse'  # Because labels are integers (0 to 9)
+)
+
+# Load test images
+test_generator = test_datagen.flow_from_directory(
+    test_dir,
+    target_size=(28, 28),
+    color_mode='grayscale',
+    batch_size=32,
+    class_mode='sparse'
+)
+
+# Step 4: Build CNN Model
+model = models.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    layers.MaxPooling2D((2,2)),
+    
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D((2,2)),
+    
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(10, activation='softmax')  # 10 classes
+])
+
+# Step 5: Compile the Model
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Step 6: Train the Model
+history = model.fit(
+    train_generator,
+    epochs=10,
+    validation_data=test_generator
+)
+
+# Step 7: Evaluate the Model
+loss, accuracy = model.evaluate(test_generator)
+print(f"Test Accuracy: {accuracy*100:.2f}%")
+
+# Step 8: Plot Training History
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Val Accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()

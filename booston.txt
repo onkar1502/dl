@@ -1,0 +1,52 @@
+# Import Libraries
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
+# Step 1: Load the dataset using read_csv
+# (Assume you have 'boston.csv' file in the same folder)
+
+data = pd.read_csv('boston.csv')  # <- your CSV file name
+
+# Step 2: Separate features (X) and target (y)
+X = data.drop('MEDV', axis=1)  # MEDV = Median value of owner-occupied homes (target)
+y = data['MEDV']
+
+# Step 3: Split into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Normalize the data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 5: Build the Deep Neural Network model
+model = keras.Sequential([
+    keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),  # Hidden Layer 1
+    keras.layers.Dense(32, activation='relu'),                                   # Hidden Layer 2
+    keras.layers.Dense(1, activation='linear')                                   # Output Layer
+])
+
+# Step 6: Compile the model
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+# Step 7: Train the model
+history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, verbose=1)
+
+# Step 8: Evaluate the model
+loss, mae = model.evaluate(X_test, y_test, verbose=1)
+print(f"Mean Absolute Error on Test Set: {mae}")
+
+# Step 9: Make Predictions
+y_pred = model.predict(X_test)
+
+# Step 10: Plot Actual vs Predicted Prices
+plt.scatter(y_test, y_pred)
+plt.xlabel("Actual Prices")
+plt.ylabel("Predicted Prices")
+plt.title("Actual vs Predicted Prices")
+plt.show()
